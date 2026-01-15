@@ -23,6 +23,14 @@
             event.stopPropagation();
             focusSearch();
         }
+        
+        // Cmd + Option + G (macOS) - Open GIF picker
+        if (event.metaKey && event.altKey && (event.key === 'g' || event.code === 'KeyG')) {
+            console.log('GIF shortcut triggered!');
+            event.preventDefault();
+            event.stopPropagation();
+            openGifPicker();
+        }
     }, true);
 
     function openEmojiPicker() {
@@ -145,6 +153,126 @@
 
             // Show a subtle notification to the user
             showNotification('Emoji picker button not found. Please try opening a chat first.');
+        }
+    }
+
+    function openGifPicker() {
+        console.log('openGifPicker() called');
+        
+        // Try multiple selectors as Messenger's UI may vary
+        const selectors = [
+            'div[aria-label="Choose a GIF"]',
+            'div[aria-label="Vali GIF"]',
+            'div[aria-label*="GIF" i]',
+            'div[role="button"][aria-label*="GIF" i]',
+            '[data-testid="gif_picker_button"]',
+            'button[aria-label*="GIF" i]',
+        ];
+
+        let gifButton = null;
+
+        for (const selector of selectors) {
+            gifButton = document.querySelector(selector);
+            if (gifButton) {
+                console.log('Found GIF button with selector:', selector);
+                console.log('Button element:', gifButton);
+                break;
+            }
+        }
+
+        if (gifButton) {
+            // Simulate a full mouse interaction sequence with React-compatible events
+            const simulateClick = (element) => {
+                // First, ensure the element is in view
+                element.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+                
+                // Create a bounding rect for realistic coordinates
+                const rect = element.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                
+                // Dispatch pointerdown (React uses pointer events)
+                const pointerdownEvent = new PointerEvent('pointerdown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: x,
+                    clientY: y,
+                    button: 0,
+                    buttons: 1,
+                    isPrimary: true
+                });
+                element.dispatchEvent(pointerdownEvent);
+                console.log('Dispatched pointerdown');
+                
+                // Dispatch mousedown
+                const mousedownEvent = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: x,
+                    clientY: y,
+                    button: 0,
+                    buttons: 1
+                });
+                element.dispatchEvent(mousedownEvent);
+                console.log('Dispatched mousedown');
+                
+                // Small delay to simulate real user interaction
+                setTimeout(() => {
+                    // Dispatch pointerup
+                    const pointerupEvent = new PointerEvent('pointerup', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: x,
+                        clientY: y,
+                        button: 0,
+                        buttons: 0,
+                        isPrimary: true
+                    });
+                    element.dispatchEvent(pointerupEvent);
+                    console.log('Dispatched pointerup');
+                    
+                    // Dispatch mouseup
+                    const mouseupEvent = new MouseEvent('mouseup', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: x,
+                        clientY: y,
+                        button: 0,
+                        buttons: 0
+                    });
+                    element.dispatchEvent(mouseupEvent);
+                    console.log('Dispatched mouseup');
+                    
+                    // Dispatch click
+                    const clickEvent = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: x,
+                        clientY: y,
+                        button: 0,
+                        buttons: 0
+                    });
+                    element.dispatchEvent(clickEvent);
+                    console.log('Dispatched click');
+                    
+                    // Also try the native click method as final backup
+                    element.click();
+                    console.log('Called native click()');
+                }, 10);
+            };
+            
+            simulateClick(gifButton);
+        } else {
+            console.warn('GIF picker button not found. Selectors tried:', selectors);
+            console.log('Available buttons on page:', document.querySelectorAll('div[role="button"]'));
+
+            // Show a subtle notification to the user
+            showNotification('GIF picker button not found. Please try opening a chat first.');
         }
     }
 
